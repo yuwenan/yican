@@ -70,6 +70,6 @@ node scripts/render-check.mjs  # 23 屏渲染 + 关键文案
 
 ## 已知坑
 
-- 图标为纯 SVG；个别安卓/旧 iOS 主屏图标或需 192/512 PNG（未引入图像依赖，后续可补）。
+- 图标同时提供 SVG 与 192/512/180 PNG（PNG 由 Edge 无头模式从 SVG 直接截图，无图像依赖）；iOS 主屏取 apple-touch-icon.png。
 - 局域网 `http://<IP>` 能浏览但不能安装/离线；安装与离线请走 HTTPS（GitHub Pages）。
 - 语义色 ok/warn/danger 在 Figma 中未给值（「淡绿」仅见于文字说明），现为实现补的低饱和色，见 `DESIGN.md`。

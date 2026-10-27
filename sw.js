@@ -1,5 +1,5 @@
 /* 一餐 · 离线缓存。改静态资源后 bump CACHE 版本即可整体更新。 */
-const CACHE = 'yican-v1';
+const CACHE = 'yican-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -16,7 +16,11 @@ const ASSETS = [
   './assets/img/kitchen-generic.png',
   './assets/img/cookware.png',
   './assets/icons/icon.svg',
-  './assets/icons/icon-maskable.svg'
+  './assets/icons/icon-maskable.svg',
+  './assets/icons/icon-192.png',
+  './assets/icons/icon-512.png',
+  './assets/icons/icon-maskable-512.png',
+  './assets/icons/apple-touch-icon.png'
 ];
 
 self.addEventListener('install', (e) => {
