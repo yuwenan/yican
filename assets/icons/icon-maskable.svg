@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- maskable：满幅底，内容收进中心 80% 安全区 -->
+  <rect width="512" height="512" fill="#F8EEE8"/>
+  <g transform="translate(47 40) scale(0.82)">
+    <path d="M132 268a124 124 0 0 0 248 0z" fill="none" stroke="#24252A" stroke-width="28" stroke-linejoin="round"/>
+    <line x1="112" y1="268" x2="400" y2="268" stroke="#24252A" stroke-width="28" stroke-linecap="round"/>
+    <path d="M214 214c0-20 26-20 26-40M272 214c0-20 26-20 26-40" fill="none" stroke="#B07A4F" stroke-width="22" stroke-linecap="round"/>
+    <line x1="206" y1="416" x2="306" y2="416" stroke="#24252A" stroke-width="28" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -1,0 +1,16 @@
+{
+  "name": "一餐 · 我的厨房",
+  "short_name": "一餐",
+  "description": "把日常做得有滋有味：记住手边食材，安排一餐，采买、开火、盖章。",
+  "lang": "zh-CN",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAFAFC",
+  "theme_color": "#FAFAFC",
+  "icons": [
+    { "src": "assets/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "assets/icons/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

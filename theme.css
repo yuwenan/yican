@@ -1,0 +1,72 @@
+/* @theme
+   name: yican-prototype
+   title: 一餐 · 原型原色
+   mode: light
+   mood: 近白冷灰底、白卡零阴影、墨黑主按钮，唯一暖色留给开饭印章；毛玻璃底导
+   tags: light, consumer, kitchen, ink-button, warm-stamp, glass-nav, hairline, radius-22
+   source: Figma「一餐 · 我的厨房｜MVP 交互原型」fileKey y6JlnXiZQ4ygTLekmKKH0S 实测 token
+   note: 语义色(ok/warn/danger)Figma 未给值（“淡绿”仅见于文字说明），为实现补的低饱和色，已在 DESIGN.md 记录
+*/
+
+:root {
+  /* 底色层：Figma fill_823H72 页面底 / fill_M9XC0S 次级层 */
+  --bg: #FAFAFC;
+  --bg-2: #F0F1F4;
+
+  /* 卡面：fill_ZMG15S 白卡；抬高面用次级灰 */
+  --surface: #FFFFFF;
+  --surface-2: #F0F1F4;
+
+  /* 发丝线：原型靠白卡与底分层，无显式边框 token，这里用墨色 8% 发丝 / fill_MJFTIS 较明显边 */
+  --border: rgba(36, 37, 42, 0.08);
+  --border-strong: #E6E7EC;
+
+  /* 文字：fill_ZALFH3 主文字 / fill_RUMEAO 次文字；faint 为派生 */
+  --text: #24252A;
+  --text-muted: #777A84;
+  --text-faint: #AAADB6;
+
+  /* 强调：原型主按钮即墨黑 fill_ZALFH3（V2 #24252A 圆角25），唯一暖色 fill_K7Z1ED 做印章/弱强调 */
+  --accent: #24252A;
+  --accent-text: #FFFFFF;
+  --accent-soft: #F8EEE8;
+
+  /* 英雄区：首页无深色顶栏，hero 同纸白 */
+  --hero: #FFFFFF;
+  --hero-text: #24252A;
+
+  /* 语义色（Figma 未给，实现补的低饱和值） */
+  --ok: #4E7A5F;
+  --ok-soft: #EDF3EE;
+  --warn: #B07A4F;
+  --warn-soft: #F6ECE3;
+  --danger: #C04A3E;
+  --danger-soft: #F8E9E6;
+
+  /* 字体：原型唯一字体 Noto Sans SC，行高约 1.45；不引外部字体，走系统中文回退以保离线 */
+  --font-display: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --font-mono: "SF Mono", "JetBrains Mono", "Cascadia Mono", Consolas, monospace;
+
+  --weight-body: 400;
+  --weight-strong: 500;
+  --display-tracking: -0.01em;
+
+  /* 圆角：V1 卡 22 / V2 卡 18-24；按钮 V2 25；底导胶囊 28 */
+  --radius-card: 22px;
+  --radius-control: 25px;
+
+  /* 阴影：普通卡无阴影；pop 为底导 effect_W17LI2 */
+  --shadow-card: none;
+  --shadow-pop: 0 5px 24px rgba(31, 36, 51, 0.10), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+
+  --focus-ring: 0 0 0 2px rgba(36, 37, 42, 0.18);
+
+  /* —— 项目专用（非契约）：App 外壳与毛玻璃，来自 Figma 实测 —— */
+  --stamp: #F8EEE8;            /* fill_K7Z1ED 开饭印章暖米 */
+  --nav-fill: rgba(255, 255, 255, 0.64);  /* fill_LY9CDM 玻璃底导 */
+  --nav-stroke: rgba(255, 255, 255, 0.9); /* fill_S6MWG7 */
+  --nav-active: rgba(228, 230, 236, 0.62);/* fill_9MD0K2 选中胶囊 */
+  --scrim: rgba(36, 37, 42, 0.22);        /* fill_B0PFAX 遮罩 */
+  --side: 24px;                /* 屏幕左右边距，内容宽 342 */
+}
