@@ -10,6 +10,7 @@ export const I = {
   arrow: P('<path d="M9 5l7 7-7 7"/>'),
   back: P('<path d="M15 5l-7 7 7 7"/>'),
   plus: P('<path d="M12 5v14M5 12h14"/>'),
+  x: P('<path d="M6 6l12 12M18 6 6 18"/>'),
   check: P('<path d="M4 12.5l5 5L20 6.5"/>'),
   pot: P('<path d="M5 11h14v4a6 6 0 0 1-6 6h-2a6 6 0 0 1-6-6z"/><path d="M9 11V8a3 3 0 0 1 6 0v3"/><path d="M4 11h2M18 11h2"/>'),
   leaf: P('<path d="M5 19c0-8 6-14 14-14 0 8-6 14-14 14z"/><path d="M5 19c4-6 8-9 12-10"/>'),

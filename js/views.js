@@ -1,5 +1,5 @@
 // 一餐 · 视图。每个函数返回一段 HTML；导航用 <a href="#/...">，动作用 data-act。
-import { store, FOODS, SEASONINGS, COOKWARE, RECIPES } from './store.js';
+import { store, FOODS, SEASONINGS, COOKWARE, RECIPES, METHODS, FLAVORS, CATEGORIES } from './store.js';
 import { recipeById } from './data.js';
 import { I } from './icons.js';
 
@@ -27,28 +27,36 @@ function back(route = '#/home') {
   return `<a class="back-btn" href="${route}" aria-label="返回">${I.back}</a>`;
 }
 
-// 菜谱卡
-function dishCard({ r, e }) {
-  const cwNames = r.cookware.map((c) => COOKWARE[c].name).join('＋');
-  let tag;
-  if (e.ready) tag = `<span class="tag tag-ok">食材齐了 · 可以直接做</span>`;
-  else if (e.blocked) tag = `<span class="tag tag-danger">缺厨具：${e.missingCookware.map((c) => COOKWARE[c].name).join('、')}</span>`;
-  else {
-    const bits = [];
-    if (e.ownedCount) bits.push(`用上 ${e.ownedCount} 样库存`);
-    if (e.lack.length) bits.push(`还缺 ${e.lack.map((x) => FOODS[x.food].name).join('、')}`);
-    if (e.unknownCookware.length) bits.push(`厨具待确认`);
-    tag = `<span class="tag">${bits.join(' · ')}</span>`;
-  }
-  return `<a class="dish-card" href="#/recipe/${r.id}">
-    <img src="${r.img}" alt="${esc(r.name)}" loading="lazy" />
-    <div class="dish-meta">
-      <div class="dish-name">${esc(r.name)}</div>
-      <div class="dish-sub">${esc(r.line)} · ${r.minutes} 分钟 · ${esc(cwNames)}</div>
-      ${tag}
-    </div>
-  </a>`;
+// 菜品图：有真图用真图，没有就用统一的“白盘 + 蒸汽”插画占位，等逐道菜补图
+function dishMedia(r, cls = '') {
+  const alt = esc(r.name);
+  if (r.img) return `<img class="${cls}" src="${r.img}" alt="${alt}" loading="lazy" />`;
+  return `<div class="dish-ph ${cls}" aria-label="${alt}">
+    <svg viewBox="0 0 160 160" aria-hidden="true">
+      <path class="ph-steam" d="M60 42c-6-7 6-10 0-17M80 42c-6-7 6-10 0-17M100 42c-6-7 6-10 0-17"/>
+      <ellipse cx="80" cy="108" rx="58" ry="42" fill="#FFFFFF"/>
+      <ellipse cx="80" cy="101" rx="45" ry="31" fill="#F2EFE9"/>
+    </svg></div>`;
 }
+
+// 菜谱卡（两列网格版）：点卡进详情，图区右下 ＋ 直接加餐单；卡面只放时间·做法
+export function recipeCard(r) {
+  const added = S.inMenu(r.id);
+  const aria = added ? '已在今晚餐单，查看餐单' : `把${r.name}加入餐单`;
+  return `<article class="dish-card">
+    <div class="card-ph">
+      <a class="card-ph-link" href="#/recipe/${r.id}" aria-label="${esc(r.name)}">${dishMedia(r)}</a>
+      <button class="card-add ${added ? 'is-on' : ''}" data-act="${added ? 'go-menu' : 'quick-add'}" data-id="${r.id}" aria-label="${aria}">${added ? I.check : I.plus}</button>
+    </div>
+    <a class="card-meta" href="#/recipe/${r.id}">
+      <div class="dish-name">${esc(r.name)}</div>
+      <div class="dish-sub">${r.minutes} 分钟 · ${METHODS[r.method]}</div>
+    </a>
+  </article>`;
+}
+
+// 推荐流条目（{r, e}）直接出菜卡；库存匹配靠排序（能做的靠前），不往小卡上塞字
+function dishCard(x) { return recipeCard(x.r); }
 
 /* ---------- 00 启动页 ---------- */
 export function splash() {
@@ -79,22 +87,25 @@ export function home(tab = 'recommend') {
   const [title, sub] = titles[tab];
   const empty = S.isKitchenEmpty();
 
-  const tabBar = `<div class="tabs">${TABS.map((t) =>
-    `<a class="tab ${tab === t.k ? 'on' : ''}" href="#/home/${t.k}">${t.n}</a>`).join('')}</div>`;
+  // 液态玻璃 segmented：白色滑块按当前 tab 平移
+  const tabIdx = TABS.findIndex((t) => t.k === tab);
+  const tabBar = `<div class="seg seg-tabs">
+    <span class="seg-thumb" style="transform:translateX(${tabIdx * 100}%)"></span>
+    ${TABS.map((t) => `<a class="seg-item ${tab === t.k ? 'on' : ''}" href="#/home/${t.k}">${t.n}</a>`).join('')}
+  </div>`;
 
   let body = '';
 
   if (tab === 'recommend') {
-    const max = S.get().prefs.maxMinutes;
-    const chips = max
-      ? `<a class="filterbar chip-on" href="#/prefs">${I.clock}<span>${max} 分钟内，轻松开饭</span><span class="chip-clear" data-act="clear-pref">${I.back}</span></a>`
-      : `<a class="filterbar" href="#/prefs">${I.spark}<span>今日灵感</span><span class="filter-go">筛选 ${I.arrow}</span></a>`;
+    const n = S.prefCount();
+    const filterEntry = n
+      ? `<a class="filterbar chip-on" href="#/prefs">${I.filter}<span>已选 ${n} 项</span><span class="chip-clear" data-act="clear-prefs" aria-label="清除筛选">${I.x}</span></a>`
+      : `<a class="filterbar" href="#/prefs">${I.filter}<span>筛选做法和口味</span><span class="filter-go">${I.arrow}</span></a>`;
     const recs = S.recommendations();
     const emptyKit = empty ? emptyKitchenNote() : '';
-    body = `${chips}${emptyKit}<section class="feed">
-      ${recs.some((x) => x.e.ready) ? '<h3 class="sec-title">简单做，也好吃</h3>' : '<h3 class="sec-title">这些，很适合今天</h3>'}
-      ${recs.map(dishCard).join('')}
-      ${recs.every((x) => x.e.blocked) ? noMatch() : ''}
+    body = `${filterEntry}${emptyKit}<section class="feed">
+      <h3 class="sec-title">${recs.some((x) => x.e.ready) ? '简单做，也好吃' : '这些，很适合今天'}</h3>
+      ${recs.length ? recs.map(dishCard).join('') : noMatchPref()}
     </section>`;
   }
 
@@ -122,7 +133,7 @@ export function home(tab = 'recommend') {
     const hot = ['番茄炒蛋', '土豆', '西兰花', '鸡蛋'];
     body = `<div class="searchbox">${I.search}<input id="crave-input" placeholder="搜索菜名或食材" autocomplete="off" /></div>
     <div class="chips">${hot.map((w) => `<button class="chip" data-act="crave" data-id="${esc(w)}">${esc(w)}</button>`).join('')}</div>
-    <div id="crave-results"><h3 class="sec-title">今天想吃点家常的</h3>${S.recommendations().map(dishCard).join('')}</div>`;
+    <div id="crave-results"><h3 class="sec-title">今天想吃点家常的</h3><div class="feed">${S.recommendations().map(dishCard).join('')}</div></div>`;
   }
 
   return `<div class="page home-page">
@@ -152,6 +163,15 @@ function noMatch() {
   </div>`;
 }
 
+// 筛选条件组合下没有菜（跨两列）
+function noMatchPref() {
+  return `<div class="empty-note soft feed-note">
+    <h3>这个组合暂时没有菜</h3>
+    <p>少选一个条件，能选的菜就会多起来。</p>
+    <a class="btn btn-primary" href="#/prefs">调整筛选</a>
+  </div>`;
+}
+
 /* ---------- 06 菜谱详情 ---------- */
 export function recipe(id) {
   const r = recipeById(id);
@@ -169,7 +189,7 @@ export function recipe(id) {
 
   return `<div class="page detail-page">
     <div class="detail-topbar">${back('#/home')}</div>
-    <img class="detail-hero" src="${r.img}" alt="${esc(r.name)}" />
+    ${dishMedia(r, 'detail-hero')}
     <div class="detail-body">
       <h2>${esc(r.name)}</h2>
       <p class="detail-line">${esc(r.line)}，一人份刚刚好</p>
@@ -214,7 +234,7 @@ export function menu() {
     const cid = e.unknownCookware[0];
     return `<div class="page">${back('#/recipe/' + r.id)}${head('今天晚餐', `${esc(r.name)} · ${r.servings} 人份`)}
       <div class="scroll-body">
-        <div class="dish-strip"><img src="${r.img}" alt=""/><div><div class="dish-name">${esc(r.name)}</div><div class="dish-sub">${r.minutes} 分钟</div></div></div>
+        <div class="dish-strip">${dishMedia(r, 'strip-img')}<div><div class="dish-name">${esc(r.name)}</div><div class="dish-sub">${r.minutes} 分钟</div></div></div>
         <div class="ask-card">
           <div class="ask-ico">${I.pot}</div>
           <h3>家里有${COOKWARE[cid].name}吗？</h3>
@@ -245,7 +265,7 @@ export function menu() {
 
   return `<div class="page">${back('#/home')}${head('今天晚餐', `${r.servings} 人份 · 1 道菜 · 约 ${r.minutes} 分钟`)}
     <div class="scroll-body">
-      <div class="dish-strip"><img src="${r.img}" alt=""/><div><div class="dish-name">${esc(r.name)}</div>
+      <div class="dish-strip">${dishMedia(r, 'strip-img')}<div><div class="dish-name">${esc(r.name)}</div>
       <div class="dish-sub">${e.lack.length ? `还缺 ${e.lack.length} 样食材` : '食材都齐了'}</div></div></div>
       <div class="pill-group">${haveLines}${lackLines}</div>
       ${e.missingSeasoning.length ? `<p class="hint warn-hint">${e.missingSeasoning.map((s) => SEASONINGS[s].name).join('、')}用完了，顺手补一瓶。</p>` : ''}
@@ -318,7 +338,7 @@ export function ready(id) {
   const total = r.ingredients.length;
   return `<div class="page">${back('#/menu')}
     <div class="scroll-body soft-center">
-      <img class="ready-img" src="${r.img}" alt="${esc(r.name)}" />
+      ${dishMedia(r, 'ready-img')}
       <h2 class="ready-title">食材齐了，开火吧</h2>
       <p class="dim">今天晚餐 · 已准备好</p>
       <div class="ready-badge">${I.check}<span>食材已就位 · ${total} 样</span></div>
@@ -336,7 +356,7 @@ export function cook(id) {
   return `<div class="page">${back('#/menu')}
     ${head('跟着做，就好', `${esc(r.name)} · ${r.minutes} 分钟`)}
     <div class="scroll-body">
-      <img class="cook-img" src="${r.img}" alt="" />
+      ${dishMedia(r, 'cook-img')}
       <div class="steps">
         ${r.steps.map((s, i) => `<div class="step-card">
           <span class="step-no">${String(i + 1).padStart(2, '0')}</span>
@@ -484,22 +504,28 @@ export function manage(kind) {
 
 /* ---------- 筛选偏好 ---------- */
 export function prefs() {
-  const max = S.get().prefs.maxMinutes;
-  const opt = (val, label, sub) => `<button class="opt-row ${max === val ? 'on' : ''}" data-act="pref" data-id="${val}">
-    <span><span class="opt-t">${label}</span><span class="opt-s">${sub}</span></span>${I.arrow}</button>`;
+  const p = S.get().prefs;
+  const pickGroup = (title, group, dict) => `
+    <div class="pick-group">
+      <h4>${title}</h4>
+      <div class="pick-row">
+        ${Object.entries(dict).map(([id, n]) =>
+          `<button class="pick ${p[group].includes(id) ? 'on' : ''}" data-act="pref-toggle" data-g="${group}" data-id="${id}">${n}</button>`).join('')}
+      </div>
+    </div>`;
+  const count = S.recommendations().length;
   return `<div class="page sheet-page">
     <div class="scrim" data-act="close-prefs"></div>
     <div class="sheet">
       <span class="grabber"></span>
-      <h2>今天想怎么做</h2>
-      <p class="dim">有多少时间？</p>
-      <div class="card-stack">
-        ${opt(15, '15 分钟以内', '快手开饭')}
-        ${opt(30, '30 分钟以内', '慢慢做')}
-      </div>
+      <h2>今天想吃什么</h2>
+      <p class="dim">按做法、味型、类型挑一挑，都可以多选</p>
+      ${pickGroup('做法', 'methods', METHODS)}
+      ${pickGroup('味型', 'flavors', FLAVORS)}
+      ${pickGroup('类型', 'categories', CATEGORIES)}
       <div class="cta-stack">
-        <button class="btn btn-ghost" data-act="pref" data-id="">不限制，随便看看</button>
-        <a class="btn btn-primary" href="#/home/recommend">完成</a>
+        <button class="btn btn-ghost" data-act="clear-prefs">全部清除</button>
+        <a class="btn btn-primary" href="#/home/recommend">看 ${count} 道菜</a>
       </div>
     </div></div>`;
 }
@@ -524,7 +550,7 @@ export function me() {
         ${meRow(I.basket, '食材与调料', foodCount ? `${foodCount} 样食材` : '查看库存', '#/kitchen')}
         ${meRow(I.pot, '我的厨具', cwCount ? `${cwCount} 件` : '未记录', '#/manage/cookware')}
         ${meRow(I.stamp, '做过的菜', stamps.length ? `${stamps.length} 枚章` : '还没有章', '#/me')}
-        ${meRow(I.clock, '口味与时间', '调整偏好', '#/prefs')}
+        ${meRow(I.filter, '做法与口味', '筛选菜品', '#/prefs')}
       </div>
       ${stamps.length ? `<section class="stamp-history"><h3 class="sec-title">开火的日子</h3>
         ${stamps.map((d) => {

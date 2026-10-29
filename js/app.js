@@ -98,26 +98,13 @@ function bindCraving() {
     }
     box.innerHTML = `<h3 class="sec-title">${q ? '找到这些' : '今天想吃点家常的'}</h3>` +
       (list.length
-        ? list.map((r) => card(r)).join('')
+        ? `<div class="feed">${list.map((r) => V.recipeCard(r)).join('')}</div>`
         : `<div class="empty-note soft"><h3>暂时没有这道菜</h3><p>换个食材，或先记下家里有什么。</p>
            <a class="btn btn-primary" href="#/manage/food">记下家里的食材</a></div>`);
   };
   input.addEventListener('input', () => run());
   input.dataset.bound = '1';
   window.__craveRun = run;
-}
-
-// 单道菜卡（搜索结果用，直接给菜谱，不重算排序）
-function card(r) {
-  const e = store.evaluate(r);
-  const cw = r.cookware.map((c) => COOKWARE[c].name).join('＋');
-  const tag = e.ready ? `<span class="tag tag-ok">可以直接做</span>`
-    : e.blocked ? `<span class="tag tag-danger">缺厨具</span>`
-    : `<span class="tag">${[e.ownedCount ? `用上 ${e.ownedCount} 样库存` : '', e.lack.length ? `还缺 ${e.lack.map((x) => FOODS[x.food].name).join('、')}` : ''].filter(Boolean).join(' · ') || '看看做法'}</span>`;
-  return `<a class="dish-card" href="#/recipe/${r.id}">
-    <img src="${r.img}" alt="${r.name}" loading="lazy" />
-    <div class="dish-meta"><div class="dish-name">${r.name}</div>
-    <div class="dish-sub">${r.line} · ${r.minutes} 分钟 · ${cw}</div>${tag}</div></a>`;
 }
 
 function bindPage() {
@@ -134,6 +121,13 @@ document.addEventListener('click', (ev) => {
   switch (act) {
     case 'add-menu':
       store.addToMenu(id);
+      location.hash = '#/menu';
+      break;
+    case 'quick-add':
+      // 网格卡右下角 + ：直接加餐单，不跳页，留在选菜流里继续逛
+      store.addToMenu(id);
+      break;
+    case 'go-menu':
       location.hash = '#/menu';
       break;
     case 'clear-menu':
@@ -187,18 +181,15 @@ document.addEventListener('click', (ev) => {
     case 'cw-set':
       store.setCookware(id, el.dataset.v);
       break;
-    case 'pref': {
-      const st = store.get();
-      st.prefs.maxMinutes = id === '' ? null : Number(id);
-      localStorage.setItem('yican.state.v1', JSON.stringify(st));
-      if (!el.closest('.sheet')) render();
-      break;
-    }
-    case 'clear-pref':
+    case 'pref-toggle':
       ev.preventDefault();
       ev.stopPropagation();
-      { const st = store.get(); st.prefs.maxMinutes = null;
-        localStorage.setItem('yican.state.v1', JSON.stringify(st)); render(); }
+      store.togglePref(el.dataset.g, id); // save() 会自动重渲染，chip 选中态原地更新
+      break;
+    case 'clear-prefs':
+      ev.preventDefault();
+      ev.stopPropagation();
+      store.clearPrefs();
       break;
     case 'close-prefs':
       location.hash = '#/home/recommend';

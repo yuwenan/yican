@@ -1,5 +1,5 @@
 /* 一餐 · 离线缓存。改静态资源后 bump CACHE 版本即可整体更新。 */
-const CACHE = 'yican-v2';
+const CACHE = 'yican-v3';
 const ASSETS = [
   './',
   './index.html',

@@ -5,9 +5,14 @@
 //  3) 重复确认不重复扣（完成动作以一次性快照执行）；
 //  4) 调料 none 只能手动恢复，绝不被默认值覆盖。
 
-import { FOODS, SEASONINGS, COOKWARE, RECIPES, recipeById } from './data.js';
+import { FOODS, SEASONINGS, COOKWARE, RECIPES, METHODS, FLAVORS, CATEGORIES, recipeById } from './data.js';
 
 const KEY = 'yican.state.v1';
+
+// 筛选偏好：做法/味型/分类，各自多选；空数组 = 不限制
+function defaultPrefs() {
+  return { methods: [], flavors: [], categories: [] };
+}
 
 // 为让第一版打开即有可走通的闭环，预置 V2 番茄链假设的最小厨房：
 // 鸡蛋 2、盐/油有；厨具全部“未记录”（正好走“家里有炒锅吗”确认分支）。
@@ -20,7 +25,7 @@ function defaultState() {
     menu: [],                 // [{recipeId}]  首版一道
     shopping: [],             // [{food, qty, unit, reason:'lack'|'restock', checked}]
     history: [],              // [{recipeId, date, stamp:true}]
-    prefs: { maxMinutes: null }
+    prefs: defaultPrefs()
   };
 }
 
@@ -30,7 +35,7 @@ function emptyState() {
     onboarded: true,
     inventory: {}, seasonings: {}, cookware: {},
     menu: [], shopping: [], history: [],
-    prefs: { maxMinutes: null }
+    prefs: defaultPrefs()
   };
 }
 
@@ -39,7 +44,10 @@ function load() {
     const raw = localStorage.getItem(KEY);
     if (!raw) return defaultState();
     const s = JSON.parse(raw);
-    return Object.assign(defaultState(), s);
+    const merged = Object.assign(defaultState(), s);
+    // 旧版 prefs 是 {maxMinutes}，结构变了直接重置，避免老缓存里残留时间筛选
+    if (!merged.prefs || !Array.isArray(merged.prefs.methods)) merged.prefs = defaultPrefs();
+    return merged;
   } catch {
     return defaultState();
   }
@@ -112,11 +120,14 @@ export const store = {
     return { lack, ownedCount, unknownCookware, missingCookware, missingSeasoning, blocked, ready };
   },
 
-  // 推荐排序：可做 > 只差确认/食材 > 缺厨具；15 分钟偏好过滤
+  // 推荐排序：可做 > 只差确认/食材 > 缺厨具；按做法/味型/分类筛选
   recommendations() {
-    const max = state.prefs.maxMinutes;
+    const p = state.prefs || defaultPrefs();
     return RECIPES
-      .filter((r) => !max || r.minutes <= max)
+      .filter((r) =>
+        (!p.methods.length || p.methods.includes(r.method)) &&
+        (!p.flavors.length || r.flavors.some((f) => p.flavors.includes(f))) &&
+        (!p.categories.length || p.categories.includes(r.category)))
       .map((r) => ({ r, e: this.evaluate(r) }))
       .sort((a, b) => score(b) - score(a));
     function score(x) {
@@ -126,11 +137,31 @@ export const store = {
     }
   },
 
+  /* ---------- 筛选偏好 ---------- */
+  togglePref(group, id) {
+    const p = state.prefs;
+    const arr = p[group];
+    const i = arr.indexOf(id);
+    if (i >= 0) arr.splice(i, 1); else arr.push(id);
+    save();
+  },
+  clearPrefs() {
+    state.prefs = defaultPrefs();
+    save();
+  },
+  prefCount() {
+    const p = state.prefs || defaultPrefs();
+    return p.methods.length + p.flavors.length + p.categories.length;
+  },
+
   /* ---------- 餐单 ---------- */
   addToMenu(recipeId) {
     // 选菜不入账。同菜重复加入 = 维持一道（首版份量固定 1），不重复堆。
     state.menu = [{ recipeId }];
     save();
+  },
+  inMenu(recipeId) {
+    return state.menu.some((m) => m.recipeId === recipeId);
   },
   clearMenu() { state.menu = []; save(); },
   currentDish() {
@@ -219,4 +250,4 @@ export const store = {
   }
 };
 
-export { FOODS, SEASONINGS, COOKWARE, RECIPES };
+export { FOODS, SEASONINGS, COOKWARE, RECIPES, METHODS, FLAVORS, CATEGORIES };
