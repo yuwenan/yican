@@ -126,8 +126,9 @@ export const RECIPES = [
     minutes: 20,
     method: 'stirfry',
     flavors: ['spicy', 'savory'],
-    category: 'egg',
+    category: 'meat',
     servings: 1,
+    img: 'assets/img/dish-mapo-tofu.png',
     cookware: ['wok'],
     ingredients: [
       { food: 'tofu', qty: 1 },
@@ -153,6 +154,7 @@ export const RECIPES = [
     flavors: ['light'],
     category: 'egg',
     servings: 1,
+    img: 'assets/img/dish-steamed-egg.png',
     cookware: ['steamer'],
     ingredients: [
       { food: 'egg', qty: 2 },
@@ -176,6 +178,7 @@ export const RECIPES = [
     flavors: ['light', 'savory'],
     category: 'egg',
     servings: 1,
+    img: 'assets/img/dish-shrimp-egg.png',
     cookware: ['wok'],
     ingredients: [
       { food: 'shrimp', qty: 1 },
@@ -200,6 +203,7 @@ export const RECIPES = [
     flavors: ['light'],
     category: 'egg',
     servings: 1,
+    img: 'assets/img/dish-century-tofu.png',
     cookware: [],
     ingredients: [
       { food: 'century_egg', qty: 1 },
@@ -222,6 +226,7 @@ export const RECIPES = [
     flavors: ['savory'],
     category: 'meat',
     servings: 1,
+    img: 'assets/img/dish-shredded-pork-pepper.png',
     cookware: ['wok'],
     ingredients: [
       { food: 'pork', qty: 1 },
@@ -244,6 +249,7 @@ export const RECIPES = [
     flavors: ['sweet', 'sour', 'spicy', 'savory'],
     category: 'meat',
     servings: 1,
+    img: 'assets/img/dish-yuxiang-shredded-pork.png',
     cookware: ['wok'],
     ingredients: [
       { food: 'pork', qty: 1 },
@@ -271,6 +277,7 @@ export const RECIPES = [
     flavors: ['sweet', 'savory'],
     category: 'meat',
     servings: 1,
+    img: 'assets/img/dish-cola-chicken-wings.png',
     cookware: ['wok'],
     ingredients: [
       { food: 'chicken_wing', qty: 1 },
@@ -295,6 +302,7 @@ export const RECIPES = [
     flavors: ['spicy', 'sweet', 'savory'],
     category: 'meat',
     servings: 1,
+    img: 'assets/img/dish-kungpao-chicken.png',
     cookware: ['wok'],
     ingredients: [
       { food: 'chicken_thigh', qty: 1 },
@@ -321,6 +329,7 @@ export const RECIPES = [
     flavors: ['light', 'savory'],
     category: 'meat',
     servings: 1,
+    img: 'assets/img/dish-mushroom-chicken.png',
     cookware: ['steamer'],
     ingredients: [
       { food: 'chicken_thigh', qty: 1 },
@@ -345,6 +354,7 @@ export const RECIPES = [
     flavors: ['savory', 'light'],
     category: 'meat',
     servings: 1,
+    img: 'assets/img/dish-seared-chicken-breast.png',
     cookware: ['pan'],
     ingredients: [
       { food: 'chicken_breast', qty: 1 },
@@ -367,6 +377,7 @@ export const RECIPES = [
     flavors: ['sour', 'spicy'],
     category: 'veg',
     servings: 1,
+    img: 'assets/img/dish-sour-spicy-potato-shreds.png',
     cookware: ['wok'],
     ingredients: [
       { food: 'potato', qty: 2 },
@@ -390,6 +401,7 @@ export const RECIPES = [
     flavors: ['light'],
     category: 'veg',
     servings: 1,
+    img: 'assets/img/dish-garlic-broccoli.png',
     cookware: ['wok'],
     ingredients: [
       { food: 'broccoli', qty: 1 },
@@ -412,6 +424,7 @@ export const RECIPES = [
     flavors: ['savory', 'light'],
     category: 'veg',
     servings: 1,
+    img: 'assets/img/dish-oyster-lettuce.png',
     cookware: ['wok'],
     ingredients: [
       { food: 'lettuce', qty: 1 },
@@ -434,6 +447,7 @@ export const RECIPES = [
     flavors: ['sour', 'light'],
     category: 'veg',
     servings: 1,
+    img: 'assets/img/dish-smashed-cucumber.png',
     cookware: [],
     ingredients: [
       { food: 'cucumber', qty: 1 },
@@ -455,6 +469,7 @@ export const RECIPES = [
     flavors: ['savory'],
     category: 'staple',
     servings: 1,
+    img: 'assets/img/dish-egg-fried-rice.png',
     cookware: ['wok'],
     ingredients: [
       { food: 'cooked_rice', qty: 1 },
@@ -479,6 +494,7 @@ export const RECIPES = [
     flavors: ['savory', 'sweet'],
     category: 'staple',
     servings: 1,
+    img: 'assets/img/dish-scallion-oil-noodles.png',
     cookware: ['pot'],
     ingredients: [
       { food: 'noodle', qty: 1 },
@@ -502,6 +518,7 @@ export const RECIPES = [
     flavors: ['savory'],
     category: 'staple',
     servings: 1,
+    img: 'assets/img/dish-sausage-potato-rice.png',
     cookware: ['ricecooker', 'wok'],
     ingredients: [
       { food: 'rice', qty: 1 },
@@ -527,6 +544,7 @@ export const RECIPES = [
     flavors: ['light', 'savory'],
     category: 'soup',
     servings: 1,
+    img: 'assets/img/dish-seaweed-egg-soup.png',
     cookware: ['pot'],
     ingredients: [
       { food: 'seaweed', qty: 1 },

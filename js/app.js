@@ -1,6 +1,6 @@
-// 一餐 · 应用入口：hash 路由 + 玻璃底导 + 动作委托 + 自写确认弹窗 + 离线缓存
+// 一餐 · 应用入口：hash 路由 + 玻璃胶囊底导 + 动作委托 + 自写确认弹窗 + 离线缓存
 import { store, FOODS, COOKWARE } from './store.js';
-import { recipeById, RECIPES } from './data.js';
+import { RECIPES } from './data.js';
 import { I } from './icons.js';
 import * as V from './views.js';
 
@@ -10,19 +10,21 @@ const app = document.getElementById('app');
 const routes = [
   [/^#?\/?$/, () => splashOrHome()],
   [/^#\/splash$/, () => ({ html: V.splash(), chrome: 'none', splash: true })],
-  [/^#\/home(?:\/(recommend|pantry|craving))?$/, (m) => ({ html: V.home(m[1] || 'recommend'), chrome: 'main', tab: m[1] || 'recommend' })],
+  [/^#\/home$/, () => ({ html: V.home(), chrome: 'main', nav: 0 })],
+  [/^#\/can-do$/, () => ({ html: V.canDo(), chrome: 'main', nav: 0 })],
+  [/^#\/favorites$/, () => ({ html: V.favorites(), chrome: 'main', nav: 2 })],
   [/^#\/recipe\/(.+)$/, (m) => ({ html: V.recipe(m[1]), chrome: 'sub' })],
-  [/^#\/menu$/, () => ({ html: V.menu(), chrome: 'main', nav: 'menu' })],
+  [/^#\/menu$/, () => ({ html: V.menu(), chrome: 'main', nav: 1 })],
   [/^#\/shopping$/, () => ({ html: V.shopping(), chrome: 'sub' })],
   [/^#\/ingest$/, () => ({ html: V.ingest(), chrome: 'sub' })],
   [/^#\/ready\/(.+)$/, (m) => ({ html: V.ready(m[1]), chrome: 'sub' })],
   [/^#\/cook\/(.+)$/, (m) => ({ html: V.cook(m[1]), chrome: 'sub' })],
   [/^#\/consume\/(.+)$/, (m) => ({ html: V.consume(m[1]), chrome: 'sub' })],
   [/^#\/stamp\/(.+)$/, (m) => ({ html: V.stamp(m[1]), chrome: 'sub' })],
-  [/^#\/kitchen$/, () => ({ html: V.kitchen(), chrome: 'main', nav: 'me' })],
+  [/^#\/kitchen$/, () => ({ html: V.kitchen(), chrome: 'main', nav: 2 })],
   [/^#\/manage\/(food|seasoning|cookware)$/, (m) => ({ html: V.manage(m[1]), chrome: 'sub' })],
   [/^#\/prefs$/, () => ({ html: V.prefs(), chrome: 'none' })],
-  [/^#\/me$/, () => ({ html: V.me(), chrome: 'main', nav: 'me' })]
+  [/^#\/me$/, () => ({ html: V.me(), chrome: 'main', nav: 2 })]
 ];
 
 function splashOrHome() {
@@ -30,36 +32,37 @@ function splashOrHome() {
     sessionStorage.setItem('yican.splash', '1');
     return { html: V.splash(), chrome: 'none', splash: true };
   }
-  return { html: V.home('recommend'), chrome: 'main', tab: 'recommend' };
+  return { html: V.home(), chrome: 'main', nav: 0 };
 }
 
-function currentTab() {
-  const m = location.hash.match(/^#\/home(?:\/(recommend|pantry|craving))?$/);
-  return m ? (m[1] || 'recommend') : null;
-}
+/* ---------- 常驻悬浮玻璃胶囊底导（只建一次，靠 class/transform 切换） ---------- */
+const navEl = document.createElement('nav');
+navEl.className = 'bottom-nav';
+navEl.innerHTML = `
+  <span class="nav-thumb"></span>
+  <a class="nav-item" href="#/home">${I.home}<span>首页</span></a>
+  <a class="nav-item" href="#/menu">${I.menu}<span>餐单</span></a>
+  <a class="nav-item" href="#/me">${I.user}<span>我的</span></a>`;
+document.body.appendChild(navEl);
 
-function bottomNav(active) {
-  const atHome = currentTab() !== null;
-  const item = (href, ico, label, on) =>
-    `<a class="nav-item ${on ? 'on' : ''}" href="${href}">${ico}<span>${label}</span></a>`;
-  return `<nav class="bottom-nav">
-    ${item('#/home', I.home, '首页', atHome)}
-    ${item('#/menu', I.menu, '餐单', active === 'menu')}
-    ${item('#/me', I.user, '我的', active === 'me')}
-  </nav>`;
+function setNav(active) {
+  const items = navEl.querySelectorAll('.nav-item');
+  items.forEach((it, i) => it.classList.toggle('on', i === active));
+  navEl.querySelector('.nav-thumb').style.transform = `translateX(${active * 100}%)`;
+  navEl.classList.add('show');
 }
+function hideNav() { navEl.classList.remove('show'); }
 
 let splashTimer = null;
-function render() {
+function render(resetScroll = true) {
   const hash = location.hash || '#/';
   let view = null;
   for (const [re, fn] of routes) {
     const m = hash.match(re);
     if (m) { view = fn(m); break; }
   }
-  if (!view) { view = { html: V.home('recommend'), chrome: 'main' }; }
+  if (!view) view = { html: V.home(), chrome: 'main', nav: 0 };
 
-  // 启动页定时
   if (splashTimer) { clearTimeout(splashTimer); splashTimer = null; }
   if (view.splash) {
     splashTimer = setTimeout(() => { location.hash = '#/home'; }, 1600);
@@ -67,27 +70,30 @@ function render() {
 
   if (view.chrome === 'none') {
     app.innerHTML = view.html;
+    hideNav();
   } else if (view.chrome === 'main') {
-    const navKey = view.nav || (currentTab() ? 'home' : '');
-    app.innerHTML = `<div class="screen with-nav">${view.html}${bottomNav(navKey)}</div>`;
+    app.innerHTML = `<div class="screen with-nav">${view.html}</div>`;
+    setNav(view.nav ?? 0);
   } else {
     app.innerHTML = `<div class="screen">${view.html}</div>`;
+    hideNav();
   }
-  window.scrollTo(0, 0);
+  if (resetScroll) window.scrollTo(0, 0);
   bindPage();
 }
 
-window.addEventListener('hashchange', render);
-store.subscribe(() => render());
+// 切路由回到顶部；数据变更（勾选/步进/收藏）触发的重渲染保持滚动位置
+window.addEventListener('hashchange', () => render(true));
+store.subscribe(() => render(false));
 
-/* ---------- 想吃什么：本地搜索过滤 ---------- */
-function bindCraving() {
+/* ---------- 我能做：顶部搜索。默认只列马上能开火的，输入后搜全部菜 ---------- */
+function bindSearch() {
   const input = document.getElementById('crave-input');
   const box = document.getElementById('crave-results');
   if (!input || !box) return;
   const run = (kw) => {
     const q = (kw || input.value).trim();
-    let list = store.recommendations().map((x) => x.r);
+    let list;
     if (q) {
       list = RECIPES.filter((r) => {
         const inName = r.name.includes(q) || r.line.includes(q);
@@ -95,20 +101,22 @@ function bindCraving() {
           r.cookware.some((c) => COOKWARE[c].name.includes(q));
         return inName || inFood;
       });
+    } else {
+      list = RECIPES.filter((r) => store.evaluate(r).ready);
     }
-    box.innerHTML = `<h3 class="sec-title">${q ? '找到这些' : '今天想吃点家常的'}</h3>` +
+    box.innerHTML = `<h3 class="sec-title">${
+      q ? (list.length ? '找到这些' : '暂时没有这道菜') : (list.length ? `现在就能开火 · ${list.length} 道` : '暂时没有能直接做的菜')
+    }</h3>` +
       (list.length
         ? `<div class="feed">${list.map((r) => V.recipeCard(r)).join('')}</div>`
-        : `<div class="empty-note soft"><h3>暂时没有这道菜</h3><p>换个食材，或先记下家里有什么。</p>
+        : `<div class="empty-note soft feed-note"><p>换个食材，或先记下家里有什么。</p>
            <a class="btn btn-primary" href="#/manage/food">记下家里的食材</a></div>`);
   };
   input.addEventListener('input', () => run());
-  input.dataset.bound = '1';
-  window.__craveRun = run;
 }
 
 function bindPage() {
-  bindCraving();
+  bindSearch();
 }
 
 /* ---------- 动作委托 ---------- */
@@ -119,16 +127,19 @@ document.addEventListener('click', (ev) => {
   const id = el.dataset.id;
 
   switch (act) {
-    case 'add-menu':
+    // 详情页唯一主按钮：加餐单后按齐备程度分流（确认厨具 / 采买 / 直接开火）
+    case 'start-cook': {
       store.addToMenu(id);
-      location.hash = '#/menu';
+      const r = store.currentDish();
+      const e = store.evaluate(r);
+      if (e.unknownCookware.length || e.blocked) location.hash = '#/menu';
+      else if (e.lack.length) { store.buildShopping(); location.hash = '#/shopping'; }
+      else location.hash = `#/ready/${r.id}`;
       break;
-    case 'quick-add':
-      // 网格卡右下角 + ：直接加餐单，不跳页，留在选菜流里继续逛
-      store.addToMenu(id);
-      break;
-    case 'go-menu':
-      location.hash = '#/menu';
+    }
+    case 'fav':
+      ev.preventDefault();
+      store.toggleFavorite(id); // 订阅触发重渲染，心形态随数据更新
       break;
     case 'clear-menu':
       store.clearMenu();
@@ -192,13 +203,8 @@ document.addEventListener('click', (ev) => {
       store.clearPrefs();
       break;
     case 'close-prefs':
-      location.hash = '#/home/recommend';
+      location.hash = '#/home';
       break;
-    case 'crave': {
-      const input = document.getElementById('crave-input');
-      if (input && window.__craveRun) { input.value = id; window.__craveRun(id); input.focus(); }
-      break;
-    }
     case 'reset-sample':
       confirmModal({
         title: '重置为示例厨房',

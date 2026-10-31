@@ -20,5 +20,7 @@ export const I = {
   clock: P('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'),
   refresh: P('<path d="M4 12a8 8 0 0 1 14-5.3L20 8"/><path d="M20 4v4h-4"/><path d="M20 12a8 8 0 0 1-14 5.3L4 16"/><path d="M4 20v-4h4"/>'),
   trash: P('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'),
-  spark: P('<path d="M12 4v4M12 16v4M4 12h4M16 12h4"/><path d="M7 7l2 2M15 15l2 2M17 7l-2 2M9 15l-2 2"/>')
+  spark: P('<path d="M12 4v4M12 16v4M4 12h4M16 12h4"/><path d="M7 7l2 2M15 15l2 2M17 7l-2 2M9 15l-2 2"/>'),
+  heart: P('<path d="M12 20s-7-4.4-7-9.3C5 7.8 6.9 6.2 9 6.2c1.4 0 2.5.7 3 1.8.5-1.1 1.6-1.8 3-1.8 2.1 0 4 1.6 4 4.5C19 15.6 12 20 12 20z"/>'),
+  heartFill: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 20s-7-4.4-7-9.3C5 7.8 6.9 6.2 9 6.2c1.4 0 2.5.7 3 1.8.5-1.1 1.6-1.8 3-1.8 2.1 0 4 1.6 4 4.5C19 15.6 12 20 12 20z"/></svg>'
 };

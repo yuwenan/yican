@@ -25,6 +25,7 @@ function defaultState() {
     menu: [],                 // [{recipeId}]  首版一道
     shopping: [],             // [{food, qty, unit, reason:'lack'|'restock', checked}]
     history: [],              // [{recipeId, date, stamp:true}]
+    favorites: [],            // [recipeId] 详情页心形收藏
     prefs: defaultPrefs()
   };
 }
@@ -34,7 +35,7 @@ function emptyState() {
   return {
     onboarded: true,
     inventory: {}, seasonings: {}, cookware: {},
-    menu: [], shopping: [], history: [],
+    menu: [], shopping: [], history: [], favorites: [],
     prefs: defaultPrefs()
   };
 }
@@ -120,9 +121,15 @@ export const store = {
     return { lack, ownedCount, unknownCookware, missingCookware, missingSeasoning, blocked, ready };
   },
 
-  // 推荐排序：可做 > 只差确认/食材 > 缺厨具；按做法/味型/分类筛选
+  // 推荐排序（评分账，可解释）：
+  //  ① 食材厨具全齐、马上能开火：10 分，置顶
+  //  ② 其余按家里已有食材占比：1 + 每样 0.1
+  //  ③ “可能爱吃”：与做过的菜同味型 +0.04/个、同类型 +0.04（无历史则不加分）
+  //  ④ 明确标记缺厨具：-1，沉底
+  // 做法/味型/分类筛选在评分之前过滤。
   recommendations() {
     const p = state.prefs || defaultPrefs();
+    const { cats, flavs } = this.tasteProfile();
     return RECIPES
       .filter((r) =>
         (!p.methods.length || p.methods.includes(r.method)) &&
@@ -131,11 +138,36 @@ export const store = {
       .map((r) => ({ r, e: this.evaluate(r) }))
       .sort((a, b) => score(b) - score(a));
     function score(x) {
-      if (x.e.ready) return 3;
-      if (x.e.blocked) return 0;
-      return 1 + x.e.ownedCount / 10;
+      if (x.e.blocked) return -1;
+      let s = x.e.ready ? 10 : 1 + x.e.ownedCount / 10;
+      s += x.r.flavors.filter((f) => flavs.has(f)).length * 0.04;
+      s += cats.has(x.r.category) ? 0.04 : 0;
+      return s;
     }
   },
+
+  // 从开火历史学口味：做过的菜的味型并集 + 类型并集
+  tasteProfile() {
+    const cats = new Set();
+    const flavs = new Set();
+    state.history.forEach((h) => {
+      const r = recipeById(h.recipeId);
+      if (!r) return;
+      cats.add(r.category);
+      r.flavors.forEach((f) => flavs.add(f));
+    });
+    return { cats, flavs };
+  },
+
+  /* ---------- 收藏 ---------- */
+  isFavorite(id) { return state.favorites.includes(id); },
+  toggleFavorite(id) {
+    const i = state.favorites.indexOf(id);
+    if (i >= 0) state.favorites.splice(i, 1);
+    else state.favorites.push(id);
+    save();
+  },
+  favoriteRecipes() { return state.favorites.map(recipeById).filter(Boolean); },
 
   /* ---------- 筛选偏好 ---------- */
   togglePref(group, id) {
